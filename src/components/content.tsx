@@ -38,6 +38,9 @@ export default function Content() {
   const [cookie, setCookie, removeCookie] = useCookies(["dark-theme"]);
   const [cookies, setCookies, removeCookies] = useCookies(["wordOfTheDay"]);
   const [wordDetails, setWordDetails] = useState<WordDataProps[]>();
+  const [wordOfTheDay, setWordOfTheDay] = useState<string | undefined>(
+    cookies["wordOfTheDay"]
+  ); // Local state for the word of the day
   const now = new Date();
   const expires = new Date(
     now.getFullYear(),
@@ -55,19 +58,22 @@ export default function Content() {
         try {
           const details = await getWord(res.data);
           if (details) {
-            if (cookies["wordOfTheDay"] == undefined) {
+            if (!cookies["wordOfTheDay"]) {
               setCookies("wordOfTheDay", res.data, { expires });
+              setWordOfTheDay(res.data); // Update local state
             }
           } else {
             setCookies("wordOfTheDay", "");
+            setWordOfTheDay(""); // Update local state
           }
-          console.log(details);
         } catch (err) {
           console.log(err);
         }
       });
   }
-  async function getWordOfTheDayDeatails() {
+
+  async function getWordOfTheDayDetails() {
+    await new Promise((response) => setTimeout(response, 500));
     try {
       const details = await getWord(cookies["wordOfTheDay"]);
       setWordDetails(details);
@@ -75,16 +81,23 @@ export default function Content() {
       console.log(err);
     }
   }
+
   const [darkTheme, setDarkTheme] = useState("");
   useEffect(() => {
-    if (cookie["dark-theme"] == true) {
+    if (cookie["dark-theme"] === true) {
       setDarkTheme("light");
     } else {
       setDarkTheme("dark");
     }
     getWordOfTheDay();
-    getWordOfTheDayDeatails();
   }, [cookie["dark-theme"]]);
+
+  useEffect(() => {
+    if (wordOfTheDay) {
+      getWordOfTheDayDetails();
+    }
+  }, [wordOfTheDay]);
+
   return (
     <div
       className={`flex flex-col lg:justify-center lg:flex-row p-4 lg:p-2 ${darkTheme} text-foreground bg-background lg:pb-12`}
@@ -98,15 +111,15 @@ export default function Content() {
             <Divider />
             <CardBody>
               <h4 className="text-lg font-bold" style={{ color: "#CF2CE7" }}>
-                {wordDetails?.[0].word ? wordDetails[0].word : ""}
+                {cookies["wordOfTheDay"] || ""}
               </h4>
               <p style={{ color: "gray" }}>
-                {wordDetails?.[0].phonetic ? (
-                  <p>{wordDetails?.[0].phonetic}</p>
+                {wordDetails?.[0]?.phonetic ? (
+                  <p>{wordDetails?.[0]?.phonetic}</p>
                 ) : (
                   ""
                 )}
-                {wordDetails?.[0].meanings[0].definitions ? (
+                {wordDetails?.[0]?.meanings[0]?.definitions ? (
                   <i>{wordDetails[0].meanings[0].definitions[0].definition}</i>
                 ) : (
                   ""
@@ -115,7 +128,7 @@ export default function Content() {
             </CardBody>
             <CardFooter>
               <Link
-                to={`/${cookies["wordOfTheDay"]}`}
+                to={`/${wordOfTheDay}`}
                 className="font-bold"
                 style={{ color: "#CF2CE7" }}
               >
@@ -148,6 +161,7 @@ export default function Content() {
                 className="font-bold"
                 style={{ color: "#CF2CE7" }}
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 Repo Link
                 <span className="ms-1">

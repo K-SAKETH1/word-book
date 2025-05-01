@@ -1,4 +1,4 @@
-import { data, Link, useParams } from "react-router";
+import { data, Link, useParams, useNavigate } from "react-router";
 import { getWord } from "../actions";
 import { useEffect, useState } from "react";
 import {
@@ -49,16 +49,22 @@ export default function WordDetails() {
   const [errorMessage, setErrorMessage] = useState("");
   const [cookie, setCookie, removeCookie] = useCookies(["dark-theme"]);
   const [darkTheme, setDarkTheme] = useState("");
+  const navigate = useNavigate();
 
   async function wordSet() {
-    setLoading(true); // Show spinner while fetching data
+    setLoading(true);
     try {
       const data = await getWord(params.word || "");
-      setWordData(data);
+      if (!data || data.length === 0) {
+        navigate("*"); // Redirect to 404 page
+      } else {
+        setWordData(data);
+      }
     } catch (err) {
-      console.log(err);
+      console.error(err);
+      navigate("*"); // Redirect to 404 page on error
     } finally {
-      setLoading(false); // Hide spinner after fetching data
+      setLoading(false);
     }
   }
 
@@ -179,7 +185,7 @@ export default function WordDetails() {
                 href={wordData?.[0].sourceUrls.toString()}
                 target="_blank"
               >
-                {wordData?.[0].sourceUrls}
+                {wordData?.[0].sourceUrls[0]}
               </a>
             </p>
           </CardFooter>

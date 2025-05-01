@@ -8,6 +8,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import Home from "./dic-home";
 import WordDetails from "./dic-word-details";
 import { useEffect, useState } from "react";
+import NotFound from "../components/NotFound";
 export const theme = {
   extend: {
     height: {
@@ -37,6 +38,7 @@ export default function Index() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/:word" element={<WordDetails />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </section>
       <footer>
